@@ -9,30 +9,31 @@ void print_func(uint8_t *str, uint32_t len)
 
 void print_action(struct command c)
 {
-    printf("%c ", c.letter);
+    printf("[DEBUG] %s ", c.cmd);
     for(uint8_t i = 0; i < 5; i++) {
         printf("%s ", c.params[i]);
     }
+    printf("\n");
 }
 
 int main()
 {
     terminal_init(&print_func);
     command_t com1 = {
-        .letter = 'h',
+        .cmd = "help",
         .help = "Shows Help Menu",
         .action = &print_action
     };
 
     command_t com2 = {
-        .letter = 'd',
-        .help = "Configure RTC date: d YY MM DD",
+        .cmd = "date",
+        .help = "Configure RTC date: date YY MM DD",
         .action = &print_action
     };
 
     command_t com3 = {
-        .letter = 't',
-        .help = "Configure RTC time: t HH MM SS",
+        .cmd = "time",
+        .help = "Configure RTC time: time HH MM SS",
         .action = &print_action
     };
 
@@ -41,8 +42,9 @@ int main()
     terminal_add_command(com3);
     terminal_print_help();
 
-    terminal_treat_input("d 11 22 33");
-    terminal_treat_input("t 11 22 33");
-    terminal_treat_input("s ssss");
+    terminal_treat_input("DATE 11 22 33");
+    terminal_treat_input("time 11 22 33");
+    terminal_treat_input("help 11 22 33");
+    terminal_treat_input("ssss ssss");
     return 0;
 }

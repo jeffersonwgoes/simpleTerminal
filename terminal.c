@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include "terminal.h"
 typedef struct {
     void (*print_funcion_terminal)(uint8_t*, uint32_t);
@@ -11,6 +12,8 @@ typedef struct {
 
 static terminal_t term;
 static void str_split(uint8_t * str, uint8_t params[NUMBER_OF_PARAMS][MAX_PARAM_SIZE]);
+static void lower(uint8_t *original, uint32_t len, uint8_t *lowered);
+static uint8_t get_size_command(uint8_t *str);
 
 void terminal_init(void (*print_function)(uint8_t*, uint32_t))
 {
@@ -34,11 +37,11 @@ void terminal_print_help(void)
 {
     char str[PRINT_BUFFER_SIZE];
     uint8_t len = sprintf(str, "Terminal Help\n");
-    term.print_funcion_terminal(str, len);
+    term.print_funcion_terminal((uint8_t*) str, len);
     for(uint8_t i = 0U; i < term.commands_size; i++)
     {
-        len = sprintf(str, "Command: %c %s\n", term.commands[i].letter, term.commands[i].help);
-        term.print_funcion_terminal(str, len);
+        len = sprintf(str, "Command: (%s): %s\n", term.commands[i].cmd, term.commands[i].help);
+        term.print_funcion_terminal((uint8_t*)str, len);
     }
 }
 
@@ -59,6 +62,35 @@ static void str_split(uint8_t * str, uint8_t params[NUMBER_OF_PARAMS][MAX_PARAM_
     }
 }
 
+static uint8_t get_size_command(uint8_t *str)
+{
+    uint8_t cnt = 0U;
+    for(; cnt < MAX_PARAM_SIZE && str[cnt] != ' '; cnt++);
+    if (cnt == MAX_PARAM_SIZE)
+    {
+        return 0U;
+    }
+    return cnt;
+}
+
+static void lower(uint8_t *original, uint32_t len, uint8_t *lowered)
+{
+    uint8_t i = 0U;
+    for (; i < len; i++)
+    {
+        if (original[i] > 0x40U && original[i] < 0x5b)
+        {
+            lowered[i] = original[i] + 0x20;
+        }
+        else
+        {
+            lowered[i] = original[i];
+            
+        }
+    }
+    lowered[i++] = '\0';
+}
+
 void terminal_treat_input(uint8_t* str)
 {
     if(str[0] == 'h') {
@@ -67,9 +99,12 @@ void terminal_treat_input(uint8_t* str)
         uint8_t found = 0U;
         for(uint8_t i = 0U; i < term.commands_size; i++)
         {
-            if(term.commands[i].letter == str[0]) {
+            uint8_t command_len = get_size_command(str);
+            uint8_t cmd[MAX_PARAM_SIZE];
+            lower(str, command_len, cmd);
+            if(strcmp(term.commands[i].cmd, cmd) == 0U) {
                 found = 1U;
-                str_split(&str[2], term.commands[i].params);
+                str_split(&str[command_len], term.commands[i].params);
                 term.commands[i].action(term.commands[i]);
                 break;
             }
@@ -78,7 +113,7 @@ void terminal_treat_input(uint8_t* str)
         if(!found) {
             char prt[PRINT_BUFFER_SIZE];
             uint8_t len = sprintf(prt, "\nCommand Not Found: (%s)\n", str);
-            term.print_funcion_terminal(prt, len);
+            term.print_funcion_terminal((uint8_t*)prt, len);
             terminal_print_help();
         }
     }

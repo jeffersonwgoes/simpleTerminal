@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 #ifndef HELP_SIZE
-#define HELP_SIZE 50U
+#define HELP_SIZE 100U
 #endif
 
 #ifndef NUMBER_OF_PARAMS
@@ -18,7 +18,7 @@
 #endif
 
 typedef struct command{
-    uint8_t letter;
+    uint8_t cmd[MAX_PARAM_SIZE];
     uint8_t help[HELP_SIZE];
     uint8_t params[NUMBER_OF_PARAMS][MAX_PARAM_SIZE];
     void (*action)(struct command);
